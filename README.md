@@ -6,4 +6,6 @@ A streamlit web app that allows to analyze running data from a Garmin Connect ac
 
 ## Installation
 Apart from well-known packages, python-garminconnect should be also installed via
-```pip install garminconnect```
+```bash
+pip install garminconnect
+```
