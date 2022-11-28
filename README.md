@@ -6,5 +6,10 @@ A streamlit web app that allows to analyze running data from a Garmin Connect ac
 
 ## Installation
 
+<<<<<<< HEAD
 Apart from streamlit, plotly, pandas and numpy, python-garminconnect should be installed via ```pip install garminconnect```
+=======
+Apart from streamlit, plotly, pandas and numpy, python-garminconnect should be installed via
+```pip install garminconnect```
+>>>>>>> 4897eb4d6bd7ec77b609cb8a82a72eb7f7aa2584
 
