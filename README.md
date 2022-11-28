@@ -5,11 +5,3 @@ An app to evaluate your running mechanics from Garmin data.
 A streamlit web app that allows to analyze running data from a Garmin Connect account. Data retrieval is handled using cyberjunky's python-garminconnect API wrapper (https://github.com/cyberjunky/python-garminconnect.git).
 
 ## Installation
-
-<<<<<<< HEAD
-Apart from streamlit, plotly, pandas and numpy, python-garminconnect should be installed via ```pip install garminconnect```
-=======
-Apart from streamlit, plotly, pandas and numpy, python-garminconnect should be installed via
-```pip install garminconnect```
->>>>>>> 4897eb4d6bd7ec77b609cb8a82a72eb7f7aa2584
-
