@@ -54,19 +54,11 @@ with st.sidebar:
         pwd=st.text_input("Password",type="password", key='pwd')
         log_butt=st.form_submit_button(label="Login")
         if log_butt and user and pwd:
-            # state.user=user
-            # state.pwd=pwd
             with st.spinner("Accessing..."):
                 state.api=init_api(user,pwd)
 
-#st.text(st.session_state)
 
 if state.api is not None:
-    # if "api" not in st.session_state:
-    #     st.session_state['api'] = init_api(st.session_state.user,st.session_state.pwd)
-    # st.session_state['api'] = init_api(st.session_state.user,st.session_state.pwd)
-    # if st.session_state.api is not None:
-    #     #api = st.session_state.api
         st.markdown("Logged in! :key:")
 
         with st.form(key='dates'):
@@ -90,8 +82,6 @@ if state.api is not None:
                 with st.spinner("Checking laps and processing data..."):
                     for activity in activities:
                         activity_id = activity["activityId"]
-                        # display_text(activity)
-                        # print("\n")
                         laps=state.api.get_activity_splits(activity_id)['lapDTOs']
                         add_laps=[
                             {"activity_type" : activity['activityType']['typeKey'],
@@ -100,8 +90,8 @@ if state.api is not None:
                             "lap_start": l['startTimeGMT'], 
                             "lap_distance": l['distance'],
                             "lap_duration": l['duration'],
-                            "elev_gain": l['elevationGain'],
-                            "elev_loss": l['elevationLoss'],
+                            "elev_gain": l.get('elevationGain',0),
+                            "elev_loss": l.get('elevationLoss',0),
                             "speed": l['averageSpeed'],
                             "stride_length": l['strideLength']/100,
                             "cadence": l['averageRunCadence']} for l in laps]
@@ -119,7 +109,7 @@ if state.api is not None:
 
 
                     clean_df=(lap_df.query('(activity_type == "track_running" and lap_distance >= 400) or (activity_type == "running" and lap_distance >= 1000)')
-                        .query('(elev_gain/lap_distance < 0.06) and (elev_loss/lap_distance < 0.06)'))
+                                    .query('(elev_gain/lap_distance < 0.06) and (elev_loss/lap_distance < 0.06)'))
 
 
                     c1, c0 = np.polyfit(clean_df.speed,clean_df.stride_length,1)
@@ -133,7 +123,6 @@ if state.api is not None:
                         y="stride_length", 
                         title="Stride length vs speed",
                         width=width,
-                        #height=400,
                         labels={'speed':'speed (m/s)','stride_length':'stride length (m)'},
                         hover_data=['activity_start','pace','lap_distance'],
                         size=clean_df['lap_distance'].clip(0,10**3.5),
@@ -161,7 +150,6 @@ if state.api is not None:
                         y="cadence", 
                         title="Cadence vs speed",
                         width=width,
-                        #height=400,
                         labels={'speed':'speed (m/s)','cadence':'steps per minute'},
                         hover_data=['activity_start','pace','lap_distance'],
                         size=clean_df['lap_distance'].clip(0,10**3.5),
