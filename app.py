@@ -42,7 +42,7 @@ state=st.session_state
 if 'api' not in state:
     state['api']=None
     
-st.title("A simple running form webapp")
+st.title("A simple running webapp")
 st.header("Analyze your stride length and cadence versus pace :runner:")
 
 st.write("First, login to Garmin Connect in the sidebar to the left.")
