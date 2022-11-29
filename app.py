@@ -189,7 +189,7 @@ if state.api is not None:
 
                     with col2:
                         st.plotly_chart(fig2, theme=None)
-                        st.caption(f"The linear regression coefficient for your cadence vs speed plot is **{cad_c1:.2f}** (measured in units of steps/m)")
+                        st.caption(f"The linear regression coefficient for your cadence vs speed plot is **{cad_c1/60:.2f}** (measured in units of steps/m)")
                 
                 avg_str_c=0.27
                 avg_cad_c=0.16
