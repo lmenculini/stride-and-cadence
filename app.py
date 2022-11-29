@@ -185,11 +185,11 @@ if state.api is not None:
 
                     with col1:
                         st.plotly_chart(fig1, theme=None)
-                        st.caption("The linear regression coefficient for your stride vs speed plot is **{:.2f}** (measured in units of seconds)".format(c1))
+                        st.caption(f"The linear regression coefficient for your stride vs speed plot is **{str_c1:.2f}** (measured in units of seconds)")
 
                     with col2:
                         st.plotly_chart(fig2, theme=None)
-                        st.caption("The linear regression coefficient for your cadence vs speed plot is **{:.2f}** (measured in units of steps/m)".format(a1/60))
+                        st.caption(f"The linear regression coefficient for your cadence vs speed plot is **{cad_c1:.2f}** (measured in units of steps/m)")
                 
                 avg_str_c=0.27
                 avg_cad_c=0.16
@@ -205,7 +205,7 @@ if state.api is not None:
                 
                 st.write("Comparing your values to typical ones may give you hints on your running style, assessing the role played by stride widening and cadence increase when you run faster.")
                 st.write("Usually, the higher than average is the stride coefficient and/or the lower the cadence one, the more you tend to be a *stride runner*. Instead, if the cadence coefficient (i.e. the right one) is high and the stride coefficient is low, you can probably be classified as a *cadence runner*.")
-                st.write(f"Your stride coefficient is **{delta_str:+.2%}** than average. Your cadence coefficient is **{delta_cad:+.2%}** than average.")
+                st.write(f"Your stride coefficient is **{delta_str:+.2%}** than average. Your cadence coefficient is **{delta_cad:+.2%}** than average. {draw_conclusions(delta_str,delta_cad)}")
 
             else:
                 "Please load at least two activities!"
