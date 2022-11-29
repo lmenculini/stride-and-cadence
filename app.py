@@ -65,7 +65,6 @@ if state.api is not None:
             dates=st.date_input('Time interval to consider',
                 [datetime.date(2022,1,1),datetime.date.today()],
                 max_value=datetime.date.today(),
-                #disabled=(not st.session_state['FormSubmitter:login-Login']) and (st.session_state.api is not None)
                 )
             dates_butt=st.form_submit_button(label='Search activities')
         #st.text(st.session_state)
@@ -73,7 +72,7 @@ if state.api is not None:
         if dates_butt and len(dates)==2:
             with st.spinner("Getting activities"):
                 activities = state.api.get_activities_by_date(
-                        start_date, end_date, "running"
+                        dates[0], dates[1], "running"
                         )
             st.markdown("Found **{}** running activities.".format(len(activities)))
             
