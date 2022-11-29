@@ -31,6 +31,16 @@ def init_api(email, password):
 
     return api
 
+def draw_conclusions(delta_s, delta_c):
+    if delta_s >0 and delta_c <=0:
+        return "You are a stride runner!"
+    elif delta_s <=0 and delta_c >0:
+        return "You are a cadence runner!"
+    elif (delta_s >=0 and delta_c >=0) or (delta_s < 0 and delta_c < 0):
+        if delta_s >= delta_c:
+            return "It looks like you may be a stride runner, or in between the two types."
+        elif delta_s < delta_c:
+            return "It looks like you may be a cadence runner, or in between the two types."
 
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
@@ -111,8 +121,8 @@ if state.api is not None:
                                     .query('(elev_gain/lap_distance < 0.06) and (elev_loss/lap_distance < 0.06)'))
 
 
-                    c1, c0 = np.polyfit(clean_df.speed,clean_df.stride_length,1)
-                    a1, a0 = np.polyfit(clean_df.speed,clean_df.cadence,1)
+                    str_c1, str_c0 = np.polyfit(clean_df.speed,clean_df.stride_length,1)
+                    cad_c1, cad_c0 = np.polyfit(clean_df.speed,clean_df.cadence,1)
 
                     width=700
 
@@ -136,9 +146,9 @@ if state.api is not None:
                     fig1.add_shape(
                             type='line',
                             x0=clean_df.speed.min()*0.98,
-                            y0=c0+c1*clean_df.speed.min()*0.98,
+                            y0=str_c0+str_c1*clean_df.speed.min()*0.98,
                             x1=clean_df.speed.max()*1.02,
-                            y1=c0+c1*clean_df.speed.max()*1.02,
+                            y1=str_c0+str_c1*clean_df.speed.max()*1.02,
                             line=dict(
                                 dash='dot', color='gray'
                             )
@@ -163,9 +173,9 @@ if state.api is not None:
                     fig2.add_shape(
                             type='line',
                             x0=clean_df.speed.min()*0.98,
-                            y0=a0+a1*clean_df.speed.min()*0.98,
+                            y0=cad_c0+cad_c1*clean_df.speed.min()*0.98,
                             x1=clean_df.speed.max()*1.02,
-                            y1=a0+a1*clean_df.speed.max()*1.02,
+                            y1=cad_c0+cad_c1*clean_df.speed.max()*1.02,
                             line=dict(
                                 dash='dot', color='gray'
                             )
@@ -183,6 +193,8 @@ if state.api is not None:
                 
                 avg_str_c=0.27
                 avg_cad_c=0.16
+                delta_str=round((str_c1-avg_str_c)/avg_str_c,2)
+                delta_cad=round((cad_c1-avg_cad_c)/avg_cad_c,2)
 
                 url = 'https://journals.physiology.org/doi/full/10.1152/jappl.2000.89.5.1991'
                 url1= 'https://runblogger.com/2011/09/running-speed-human-variability-and.html'
@@ -190,8 +202,10 @@ if state.api is not None:
 
                 st.markdown("#")
                 st.write(f"The values for average runners appear to be around **{avg_str_c}** for the stride coefficient and **{avg_cad_c}** for the cadence one (see e.g. *[Weyand et al., 2000]({url})*), particularly Figure 2 therein. See also the blog posts by [Hutchinson]({url1}) and [Larson]({url2}).")
+                
                 st.write("Comparing your values to typical ones may give you hints on your running style, assessing the role played by stride widening and cadence increase when you run faster.")
-                st.write("Usually, the higher than average is the stride coefficient and/or the lower the cadence one, the more you tend to be a *stride runner*. Instead, if the second coefficient (i.e. the right one) is high and the first is low, you can probably be classified as a *cadence runner*.")
+                st.write("Usually, the higher than average is the stride coefficient and/or the lower the cadence one, the more you tend to be a *stride runner*. Instead, if the cadence coefficient (i.e. the right one) is high and the stride coefficient is low, you can probably be classified as a *cadence runner*.")
+                st.write(f"Your stride coefficient is **{delta_str:+.2%}** than average. Your cadence coefficient is **{delta_cad:+.2%}** than average.")
 
             else:
                 "Please load at least two activities!"
