@@ -1,4 +1,4 @@
-# running-app
+# app-and-running
 An app to evaluate running mechanics from Garmin data, allowing the study of how stride length and cadence evolve versus running speed.
 
 ## About
