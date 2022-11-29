@@ -191,8 +191,7 @@ if state.api is not None:
                 st.markdown("#")
                 st.write(f"The values for average runners appear to be around **{avg_str_c}** for the stride coefficient and **{avg_cad_c}** for the cadence one (see e.g. *[Weyand et al., 2000]({url})*), particularly Figure 2 therein. See also the blog posts by [Hutchinson]({url1}) and [Larson]({url2}).")
                 st.write("Comparing your values to typical ones may give you hints on your running style, assessing the role played by stride widening and cadence increase when you run faster.")
-                st.write("Usually, the higher than average is the stride coefficient (and the lower the cadence one), the more you tend to be a *stride runner*. Instead, the lower than average is the former coefficient and the higher the latter, the more you should be classified as a *cadence runner*.")
-
+                st.write("Usually, the higher than average is the stride coefficient and/or the lower the cadence one, the more you tend to be a *stride runner*. Instead, if the second coefficient (i.e. the right one) is high and the first is low, you can probably be classified as a *cadence runner*.")
 
             else:
                 "Please load at least two activities!"
