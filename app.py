@@ -114,7 +114,7 @@ if state.api is not None:
                     lap_df['lap_start']=lap_df.lap_start.dt.tz_localize('GMT')
 
 
-                    lap_df['pace']=lap_df.apply(lambda x: '{}\'{:.0f}"'.format(math.floor((x.lap_duration/x.lap_distance*1000)//60),(x.lap_duration/x.lap_distance*1000)%60), axis=1)
+                    lap_df['pace']=lap_df.apply(lambda x: '{}\'{:02.0f}"'.format(math.floor((x.lap_duration/x.lap_distance*1000)//60),(x.lap_duration/x.lap_distance*1000)%60), axis=1)
 
 
                     clean_df=(lap_df.query('(activity_type == "track_running" and lap_distance >= 400) or (activity_type == "running" and lap_distance >= 1000)')
@@ -194,7 +194,7 @@ if state.api is not None:
                 avg_str_c=0.27
                 avg_cad_c=0.16
                 delta_str=round((str_c1-avg_str_c)/avg_str_c,2)
-                delta_cad=round((cad_c1-avg_cad_c)/avg_cad_c,2)
+                delta_cad=round((cad_c1/60-avg_cad_c)/avg_cad_c,2)
 
                 url = 'https://journals.physiology.org/doi/full/10.1152/jappl.2000.89.5.1991'
                 url1= 'https://runblogger.com/2011/09/running-speed-human-variability-and.html'
@@ -205,7 +205,7 @@ if state.api is not None:
                 
                 st.write("Comparing your values to typical ones may give you hints on your running style, assessing the role played by stride widening and cadence increase when you run faster.")
                 st.write("Usually, the higher than average is the stride coefficient and/or the lower the cadence one, the more you tend to be a *stride runner*. Instead, if the cadence coefficient (i.e. the right one) is high and the stride coefficient is low, you can probably be classified as a *cadence runner*.")
-                st.write(f"Your stride coefficient is **{delta_str:+.2%}** than average. Your cadence coefficient is **{delta_cad:+.2%}** than average. {draw_conclusions(delta_str,delta_cad)}")
+                st.write(f"Your stride coefficient is **{delta_str:+.0%}** than average. Your cadence coefficient is **{delta_cad:+.0%}** than average. {draw_conclusions(delta_str,delta_cad)}")
 
             else:
                 "Please load at least two activities!"
