@@ -93,7 +93,7 @@ if state.api is not None:
                         # display_text(activity)
                         # print("\n")
                         laps=state.api.get_activity_splits(activity_id)['lapDTOs']
-                        data.extend([
+                        add_laps=[
                             {"activity_type" : activity['activityType']['typeKey'],
                             "activity_start": activity['startTimeGMT'],
                             "activity_distance": activity['distance'],
@@ -104,7 +104,8 @@ if state.api is not None:
                             "elev_loss": l['elevationLoss'],
                             "speed": l['averageSpeed'],
                             "stride_length": l['strideLength']/100,
-                            "cadence": l['averageRunCadence']} for l in laps])
+                            "cadence": l['averageRunCadence']} for l in laps]
+                        data.extend(add_laps)
 
                     lap_df=pd.DataFrame(data)
 
