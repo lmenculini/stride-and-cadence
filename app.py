@@ -62,15 +62,15 @@ if state.api is not None:
         st.markdown("Logged in! :key:")
 
         with st.form(key='dates'):
-            start_date, end_date=st.date_input('Time interval to consider',
-                [datetime.date(2022,9,1),datetime.date.today()],
+            dates=st.date_input('Time interval to consider',
+                [datetime.date(2022,1,1),datetime.date.today()],
                 max_value=datetime.date.today(),
                 #disabled=(not st.session_state['FormSubmitter:login-Login']) and (st.session_state.api is not None)
                 )
             dates_butt=st.form_submit_button(label='Search activities')
         #st.text(st.session_state)
 
-        if dates_butt:
+        if dates_butt and len(dates)==2:
             with st.spinner("Getting activities"):
                 activities = state.api.get_activities_by_date(
                         start_date, end_date, "running"
@@ -197,6 +197,8 @@ if state.api is not None:
 
             else:
                 "Please load at least two activities!"
+        elif dates_butt and len(dates)<2:
+            st.write("Please select a valid start and end date")
 
 
 
