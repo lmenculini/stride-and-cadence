@@ -3,10 +3,8 @@
 
 import garminconnect as gc
 import datetime
-import json
 import math
-import matplotlib.pyplot as plt
-import numpy as np
+numimport numpy as np
 import pandas as pd
 import streamlit as st
 import plotly.express as px
