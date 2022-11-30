@@ -91,7 +91,7 @@ if state.api is not None:
                 for activity in activities:
                     entire_activity=False
                     activity_id = activity["activityId"]
-                    act_start_GMT = activity.get('startTimeGMT',datetime.date(2000,1,1)), # avoid errors in fetching activity date
+                    act_start_GMT = activity.get('startTimeGMT',datetime.date(2000,1,1)) # avoid errors in fetching activity date
                     act_distance= activity.get('distance',0)
                     act_seconds= activity.get('duration',0)
                     laps=state.api.get_activity_splits(activity_id)['lapDTOs']
@@ -100,8 +100,8 @@ if state.api is not None:
                         lap_cad=l.get('averageRunCadence',0)
                         lap_dist=l.get('distance',0)
                         lap_seconds=l.get('duration',0)
-                        if cad >0 and lap_dist >0 and lap_seconds > 0 : # consider laps only when cadence, lap distance and duration are not present
-                            calc_stride=dist*100/(cad*seconds/60)
+                        if lap_cad >0 and lap_dist >0 and lap_seconds > 0 : # consider laps only when cadence, lap distance and duration are not present
+                            calc_stride=lap_dist*100/(lap_cad*lap_seconds/60)
                             lap_stride=l.get('strideLength',calc_stride)/100
                             add_data.append({"activity_type" : activity['activityType'].get('typeKey',None),
                                             "activity_start_GMT": act_start_GMT,
@@ -135,7 +135,7 @@ if state.api is not None:
                                                 "elev_loss": activity.get('elevationLoss',0),
                                                 "cadence": activity.get('averageRunningCadenceInStepsPerMinute',0), 
                                                 "stride_length": activity.get('avgStrideLength',0),
-                                }
+                        })
                                         
                     data.extend(add_data)
 
