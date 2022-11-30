@@ -89,29 +89,52 @@ if state.api is not None:
             with st.spinner("Checking laps and processing data..."):
                 data=[]
                 for activity in activities:
+                    entire_activity=False
                     activity_id = activity["activityId"]
+                    act_start_GMT = activity.get('startTimeGMT',datetime.date(2000,1,1)), # avoid errors in fetching activity date
+                    act_distance= activity.get('distance',0)
+                    act_seconds= activity.get('duration',0)
                     laps=state.api.get_activity_splits(activity_id)['lapDTOs']
-                    add_laps=[]
+                    add_data=[]
                     for l in laps:
-                        cad=l.get('averageRunCadence',0)
-                        dist=l.get('distance',0)
-                        seconds=l.get('duration',0)
-                        if cad >0: # discard cases when cadence is not present
+                        lap_cad=l.get('averageRunCadence',0)
+                        lap_dist=l.get('distance',0)
+                        lap_seconds=l.get('duration',0)
+                        if cad >0 and lap_dist >0 and lap_seconds > 0 : # consider laps only when cadence, lap distance and duration are not present
                             calc_stride=dist*100/(cad*seconds/60)
-                            stride=l.get('strideLength',calc_stride)/100
-                            add_laps.append({"activity_type" : activity['activityType'].get('typeKey',None),
-                                            "activity_start_GMT": activity.get('startTimeGMT',datetime.date(2000,1,1)), # avoid errors in fetching activity date
-                                            "activity_distance": dist,
+                            lap_stride=l.get('strideLength',calc_stride)/100
+                            add_data.append({"activity_type" : activity['activityType'].get('typeKey',None),
+                                            "activity_start_GMT": act_start_GMT,
+                                            "activity_distance": act_distance,
+                                            "activity_duration": act_seconds,
                                             "lap_start_GMT": l.get('startTimeGMT',datetime.date(2000,1,1)),  # avoid errors in fetching lap date
-                                            "lap_distance": dist,
-                                            "lap_duration": seconds,
+                                            "lap_distance": lap_dist,
+                                            "lap_duration": lap_seconds,
                                             "speed": l.get('averageSpeed',0),
                                             "elev_gain": l.get('elevationGain',0),
                                             "elev_loss": l.get('elevationLoss',0),
-                                            "cadence": cad, 
-                                            "stride_length": stride,
+                                            "cadence": lap_cad, 
+                                            "stride_length": lap_stride,
                             })
-                    data.extend(add_laps)
+                         else:
+                            entire_activity=True
+                            break
+                    if entire_activity:
+                        add_data=[] # reset data, i.e. discard laps
+                        add_data.append({"activity_type" : activity['activityType'].get('typeKey',None),
+                                                "activity_start_GMT": act_start_GMT,
+                                                "activity_distance": act_distance,
+                                                "activity_duration": act_seconds,
+                                                "lap_start_GMT": act_start_GMT,
+                                                "lap_distance": act_distance,
+                                                "lap_duration": act_seconds,
+                                                "speed": activity.get('averageSpeed',0),
+                                                "elev_gain": activity.get('elevationGain',0),
+                                                "elev_loss": activity.get('elevationLoss',0),
+                                                "cadence": activity.get('averageRunningCadenceInStepsPerMinute',0), 
+                                                "stride_length": activity.get('avgStrideLength',0),
+                                }
+                    data.extend(add_data)
 
                 lap_df=pd.DataFrame(data)
 
@@ -124,12 +147,13 @@ if state.api is not None:
                 lap_df['pace']=lap_df.apply(lambda x: '{}\'{:02.0f}"'.format(math.floor((x.lap_duration/x.lap_distance*1000)//60),(x.lap_duration/x.lap_distance*1000)%60), axis=1)
 
                 clean_df=(lap_df[(lap_df.activity_start_GMT.dt.date > dates[0]) & (lap_df.lap_start_GMT.dt.date > dates[0])]
-                                .query('activity_distance > 0')
+                                .query('activity_distance >0 and lap_distance >0 and activity_duration > 0 and lap_duration >0 and cadence > 0 and stride_length > 0 and speed > 0')
                                 .query('(activity_type == "track_running" and lap_distance >= 400) or (activity_type == "running" and lap_distance >= 1000)')
                                 .query('(elev_gain/lap_distance < 0.06) and (elev_loss/lap_distance < 0.06)'))
                                 
 
             if len(clean_df)>=5:
+                st.write(f'Found {len(clean_df)} valid datapoints')
                 str_c1, str_c0 = np.polyfit(clean_df.speed,clean_df.stride_length,1)
                 cad_c1, cad_c0 = np.polyfit(clean_df.speed,clean_df.cadence,1)
 
