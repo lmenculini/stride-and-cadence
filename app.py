@@ -94,21 +94,21 @@ if state.api is not None:
                     add_laps=[]
                     for l in laps:
                         cad=l.get('averageRunCadence',0)
-                        dist=l['distance']
-                        seconds=l['duration']
-                        if cad >0:
+                        dist=l.get('distance',0)
+                        seconds=l.get('duration',0)
+                        if cad >0: # discard cases when cadence is not present
                             calc_stride=dist*100/(cad*seconds/60)
                             stride=l.get('strideLength',calc_stride)/100
-                            add_laps.append({"activity_type" : activity['activityType']['typeKey'],
-                                            "activity_start": activity['startTimeGMT'],
-                                            "activity_distance": activity['distance'],
-                                            "lap_start": l['startTimeGMT'], 
+                            add_laps.append({"activity_type" : activity['activityType'].get('typeKey',None),
+                                            "activity_start_GMT": activity.get(startTimeGMT',datetime.date(2000,1,1)), # avoid errors in fetching activity date
+                                            "activity_distance": dist,
+                                            "lap_start_GMT": l.get('startTimeGMT',datetime.date(2000,1,1)),  # avoid errors in fetching lap date
                                             "lap_distance": dist,
                                             "lap_duration": seconds,
-                                            "speed": l['averageSpeed'],
+                                            "speed": l.get('averageSpeed',0),
                                             "elev_gain": l.get('elevationGain',0),
                                             "elev_loss": l.get('elevationLoss',0),
-                                            "cadence": cad, # set cadence to 1 if data not present (to discard it later)
+                                            "cadence": cad, 
                                             "stride_length": stride,
                             })
                     data.extend(add_laps)
@@ -117,14 +117,17 @@ if state.api is not None:
 
                 lap_df=lap_df.astype({'activity_start':'datetime64[ns]','lap_start':'datetime64[ns]'})
                 #lap_df.dtypes
-                lap_df['activity_start']=lap_df.activity_start.dt.tz_localize('GMT')
-                lap_df['lap_start']=lap_df.lap_start.dt.tz_localize('GMT')
+                #lap_df['activity_start']=lap_df.activity_start_GMT.dt.tz_localize('GMT')
+                #lap_df['lap_start']=lap_df.lap_start.dt_GMT.tz_localize('GMT')
 
 
                 lap_df['pace']=lap_df.apply(lambda x: '{}\'{:02.0f}"'.format(math.floor((x.lap_duration/x.lap_distance*1000)//60),(x.lap_duration/x.lap_distance*1000)%60), axis=1)
 
-                clean_df=(lap_df.query('(activity_type == "track_running" and lap_distance >= 400) or (activity_type == "running" and lap_distance >= 1000)')
+                clean_df=(lap_df[(lap_df.activity_start_GMT > dates[0]) & (lap_df.lap_start_GMT > dates[0])]
+                                .query('activity_distance > 0')
+                                .query('(activity_type == "track_running" and lap_distance >= 400) or (activity_type == "running" and lap_distance >= 1000)')
                                 .query('(elev_gain/lap_distance < 0.06) and (elev_loss/lap_distance < 0.06)'))
+                                
 
             if len(clean_df)>=5:
                 str_c1, str_c0 = np.polyfit(clean_df.speed,clean_df.stride_length,1)
@@ -139,7 +142,7 @@ if state.api is not None:
                     title="Stride length vs speed",
                     width=width,
                     labels={'speed':'speed (m/s)','stride_length':'stride length (m)'},
-                    hover_data=['activity_start','pace','lap_distance'],
+                    hover_data=['activity_start','pace','lap_distance','speed','stride_length'],
                     size=clean_df['lap_distance'].clip(0,10**3.5),
                     size_max=10,
                     color='activity_type',
@@ -166,7 +169,7 @@ if state.api is not None:
                     title="Cadence vs speed",
                     width=width,
                     labels={'speed':'speed (m/s)','cadence':'steps per minute'},
-                    hover_data=['activity_start','pace','lap_distance'],
+                    hover_data=['activity_start','pace','lap_distance','speed','cadence'],
                     size=clean_df['lap_distance'].clip(0,10**3.5),
                     size_max=10,
                     color='activity_type',
