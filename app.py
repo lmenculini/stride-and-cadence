@@ -136,6 +136,7 @@ if state.api is not None:
                                                 "cadence": activity.get('averageRunningCadenceInStepsPerMinute',0), 
                                                 "stride_length": activity.get('avgStrideLength',0),
                                 }
+                                        
                     data.extend(add_data)
 
                 lap_df=pd.DataFrame(data)
