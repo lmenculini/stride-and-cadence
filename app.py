@@ -115,7 +115,7 @@ if state.api is not None:
 
                 lap_df=pd.DataFrame(data)
 
-                lap_df=lap_df.astype({'activity_start':'datetime64[ns]','lap_start':'datetime64[ns]'})
+                lap_df=lap_df.astype({'activity_start_GMT':'datetime64[ns]','lap_start_GMT':'datetime64[ns]'})
                 #lap_df.dtypes
                 #lap_df['activity_start']=lap_df.activity_start_GMT.dt.tz_localize('GMT')
                 #lap_df['lap_start']=lap_df.lap_start.dt_GMT.tz_localize('GMT')
