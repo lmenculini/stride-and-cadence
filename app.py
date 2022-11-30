@@ -123,7 +123,7 @@ if state.api is not None:
 
                 lap_df['pace']=lap_df.apply(lambda x: '{}\'{:02.0f}"'.format(math.floor((x.lap_duration/x.lap_distance*1000)//60),(x.lap_duration/x.lap_distance*1000)%60), axis=1)
 
-                clean_df=(lap_df[(lap_df.activity_start_GMT > dates[0]) & (lap_df.lap_start_GMT > dates[0])]
+                clean_df=(lap_df[(lap_df.activity_start_GMT.dt.date > dates[0]) & (lap_df.lap_start_GMT.dt.date > dates[0])]
                                 .query('activity_distance > 0')
                                 .query('(activity_type == "track_running" and lap_distance >= 400) or (activity_type == "running" and lap_distance >= 1000)')
                                 .query('(elev_gain/lap_distance < 0.06) and (elev_loss/lap_distance < 0.06)'))
