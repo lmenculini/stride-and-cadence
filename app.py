@@ -86,111 +86,117 @@ if state.api is not None:
                         )
             st.markdown("Found **{}** running activities.".format(len(activities)))
             
-            data=[]
-            if len(activities) > 1:
-                with st.spinner("Checking laps and processing data..."):
-                    for activity in activities:
-                        activity_id = activity["activityId"]
-                        laps=state.api.get_activity_splits(activity_id)['lapDTOs']
-                        add_laps=[
-                            {"activity_type" : activity['activityType']['typeKey'],
-                            "activity_start": activity['startTimeGMT'],
-                            "activity_distance": activity['distance'],
-                            "lap_start": l['startTimeGMT'], 
-                            "lap_distance": l['distance'],
-                            "lap_duration": l['duration'],
-                            "elev_gain": l.get('elevationGain',0),
-                            "elev_loss": l.get('elevationLoss',0),
-                            "speed": l['averageSpeed'],
-                            "stride_length": l['strideLength']/100,
-                            "cadence": l['averageRunCadence']} for l in laps]
-                        data.extend(add_laps)
+            with st.spinner("Checking laps and processing data..."):
+                data=[]
+                for activity in activities:
+                    activity_id = activity["activityId"]
+                    laps=state.api.get_activity_splits(activity_id)['lapDTOs']
+                    add_laps=[]
+                    for l in laps:
+                        cad=l.get('averageRunCadence',0)
+                        dist=l['distance']
+                        seconds=l['duration']
+                        if cad >0:
+                            calc_stride=dist*100/(cad*seconds/60)
+                            stride=l.get('strideLength',calc_stride)/100
+                            add_laps.append({"activity_type" : activity['activityType']['typeKey'],
+                                            "activity_start": activity['startTimeGMT'],
+                                            "activity_distance": activity['distance'],
+                                            "lap_start": l['startTimeGMT'], 
+                                            "lap_distance": dist,
+                                            "lap_duration": seconds,
+                                            "speed": l['averageSpeed'],
+                                            "elev_gain": l.get('elevationGain',0),
+                                            "elev_loss": l.get('elevationLoss',0),
+                                            "cadence": cad, # set cadence to 1 if data not present (to discard it later)
+                                            "stride_length": stride,
+                            })
+                    data.extend(add_laps)
 
-                    lap_df=pd.DataFrame(data)
+                lap_df=pd.DataFrame(data)
 
-                    lap_df=lap_df.astype({'activity_start':'datetime64[ns]','lap_start':'datetime64[ns]'})
-                    #lap_df.dtypes
-                    lap_df['activity_start']=lap_df.activity_start.dt.tz_localize('GMT')
-                    lap_df['lap_start']=lap_df.lap_start.dt.tz_localize('GMT')
-
-
-                    lap_df['pace']=lap_df.apply(lambda x: '{}\'{:02.0f}"'.format(math.floor((x.lap_duration/x.lap_distance*1000)//60),(x.lap_duration/x.lap_distance*1000)%60), axis=1)
-
-
-                    clean_df=(lap_df.query('(activity_type == "track_running" and lap_distance >= 400) or (activity_type == "running" and lap_distance >= 1000)')
-                                    .query('(elev_gain/lap_distance < 0.06) and (elev_loss/lap_distance < 0.06)'))
-
-
-                    str_c1, str_c0 = np.polyfit(clean_df.speed,clean_df.stride_length,1)
-                    cad_c1, cad_c0 = np.polyfit(clean_df.speed,clean_df.cadence,1)
-
-                    width=700
+                lap_df=lap_df.astype({'activity_start':'datetime64[ns]','lap_start':'datetime64[ns]'})
+                #lap_df.dtypes
+                lap_df['activity_start']=lap_df.activity_start.dt.tz_localize('GMT')
+                lap_df['lap_start']=lap_df.lap_start.dt.tz_localize('GMT')
 
 
-                    fig1 = px.scatter(clean_df,
-                        x="speed", 
-                        y="stride_length", 
-                        title="Stride length vs speed",
-                        width=width,
-                        labels={'speed':'speed (m/s)','stride_length':'stride length (m)'},
-                        hover_data=['activity_start','pace','lap_distance'],
-                        size=clean_df['lap_distance'].clip(0,10**3.5),
-                        size_max=10,
-                        color='activity_type',
-                        template='plotly_dark'
-                    )
-                    fig1.update_layout(title_x=0.5, title_font_size=20, legend={'yanchor':'bottom','y':0, 'xanchor':'right','x':1})
-                    fig1.update_xaxes(showgrid=True,gridwidth=1,gridcolor='lavender')
-                    fig1.update_yaxes(showgrid=True,gridwidth=1,gridcolor='lavender')
-                    #fig.layout.update(xaxis2 = go.layout.XAxis(overlaying='x',side='top'))
-                    fig1.add_shape(
-                            type='line',
-                            x0=clean_df.speed.min()*0.98,
-                            y0=str_c0+str_c1*clean_df.speed.min()*0.98,
-                            x1=clean_df.speed.max()*1.02,
-                            y1=str_c0+str_c1*clean_df.speed.max()*1.02,
-                            line=dict(
-                                dash='dot', color='gray'
-                            )
-                    )
+                lap_df['pace']=lap_df.apply(lambda x: '{}\'{:02.0f}"'.format(math.floor((x.lap_duration/x.lap_distance*1000)//60),(x.lap_duration/x.lap_distance*1000)%60), axis=1)
 
-                    fig2 = px.scatter(clean_df,
-                        x="speed", 
-                        y="cadence", 
-                        title="Cadence vs speed",
-                        width=width,
-                        labels={'speed':'speed (m/s)','cadence':'steps per minute'},
-                        hover_data=['activity_start','pace','lap_distance'],
-                        size=clean_df['lap_distance'].clip(0,10**3.5),
-                        size_max=10,
-                        color='activity_type',
-                        template='plotly_dark'
-                    )
-                    fig2.update_layout(title_x=0.5, title_font_size=20, legend={'yanchor':'bottom','y':0, 'xanchor':'right','x':1})
-                    fig2.update_xaxes(showgrid=True,gridwidth=1,gridcolor='lavender')
-                    fig2.update_yaxes(showgrid=True,gridwidth=1,gridcolor='lavender')
-                    #fig.layout.update(xaxis2 = go.layout.XAxis(overlaying='x',side='top'))
-                    fig2.add_shape(
-                            type='line',
-                            x0=clean_df.speed.min()*0.98,
-                            y0=cad_c0+cad_c1*clean_df.speed.min()*0.98,
-                            x1=clean_df.speed.max()*1.02,
-                            y1=cad_c0+cad_c1*clean_df.speed.max()*1.02,
-                            line=dict(
-                                dash='dot', color='gray'
-                            )
-                    )
+                clean_df=(lap_df.query('(activity_type == "track_running" and lap_distance >= 400) or (activity_type == "running" and lap_distance >= 1000)')
+                                .query('(elev_gain/lap_distance < 0.06) and (elev_loss/lap_distance < 0.06)'))
 
-                    col1, col2=st.columns(2)
+            if len(clean_df)>=5:
+                str_c1, str_c0 = np.polyfit(clean_df.speed,clean_df.stride_length,1)
+                cad_c1, cad_c0 = np.polyfit(clean_df.speed,clean_df.cadence,1)
 
-                    with col1:
-                        st.plotly_chart(fig1, theme=None)
-                        st.caption(f"The linear regression coefficient for your stride vs speed plot is **{str_c1:.2f}** (measured in units of seconds)")
+                width=700
 
-                    with col2:
-                        st.plotly_chart(fig2, theme=None)
-                        st.caption(f"The linear regression coefficient for your cadence vs speed plot is **{cad_c1/60:.2f}** (measured in units of steps/m)")
-                
+
+                fig1 = px.scatter(clean_df,
+                    x="speed", 
+                    y="stride_length", 
+                    title="Stride length vs speed",
+                    width=width,
+                    labels={'speed':'speed (m/s)','stride_length':'stride length (m)'},
+                    hover_data=['activity_start','pace','lap_distance'],
+                    size=clean_df['lap_distance'].clip(0,10**3.5),
+                    size_max=10,
+                    color='activity_type',
+                    template='plotly_dark'
+                )
+                fig1.update_layout(title_x=0.5, title_font_size=20, legend={'yanchor':'bottom','y':0, 'xanchor':'right','x':1})
+                fig1.update_xaxes(showgrid=True,gridwidth=1,gridcolor='lavender')
+                fig1.update_yaxes(showgrid=True,gridwidth=1,gridcolor='lavender')
+                #fig.layout.update(xaxis2 = go.layout.XAxis(overlaying='x',side='top'))
+                fig1.add_shape(
+                        type='line',
+                        x0=clean_df.speed.min()*0.98,
+                        y0=str_c0+str_c1*clean_df.speed.min()*0.98,
+                        x1=clean_df.speed.max()*1.02,
+                        y1=str_c0+str_c1*clean_df.speed.max()*1.02,
+                        line=dict(
+                            dash='dot', color='gray'
+                        )
+                )
+
+                fig2 = px.scatter(clean_df,
+                    x="speed", 
+                    y="cadence", 
+                    title="Cadence vs speed",
+                    width=width,
+                    labels={'speed':'speed (m/s)','cadence':'steps per minute'},
+                    hover_data=['activity_start','pace','lap_distance'],
+                    size=clean_df['lap_distance'].clip(0,10**3.5),
+                    size_max=10,
+                    color='activity_type',
+                    template='plotly_dark'
+                )
+                fig2.update_layout(title_x=0.5, title_font_size=20, legend={'yanchor':'bottom','y':0, 'xanchor':'right','x':1})
+                fig2.update_xaxes(showgrid=True,gridwidth=1,gridcolor='lavender')
+                fig2.update_yaxes(showgrid=True,gridwidth=1,gridcolor='lavender')
+                #fig.layout.update(xaxis2 = go.layout.XAxis(overlaying='x',side='top'))
+                fig2.add_shape(
+                        type='line',
+                        x0=clean_df.speed.min()*0.98,
+                        y0=cad_c0+cad_c1*clean_df.speed.min()*0.98,
+                        x1=clean_df.speed.max()*1.02,
+                        y1=cad_c0+cad_c1*clean_df.speed.max()*1.02,
+                        line=dict(
+                            dash='dot', color='gray'
+                        )
+                )
+
+                col1, col2=st.columns(2)
+
+                with col1:
+                    st.plotly_chart(fig1, theme=None)
+                    st.caption(f"The linear regression coefficient for your stride vs speed plot is **{str_c1:.2f}** (measured in units of seconds)")
+
+                with col2:
+                    st.plotly_chart(fig2, theme=None)
+                    st.caption(f"The linear regression coefficient for your cadence vs speed plot is **{cad_c1/60:.2f}** (measured in units of steps/m)")
+            
                 avg_str_c=0.27
                 avg_cad_c=0.16
                 delta_str=round((str_c1-avg_str_c)/avg_str_c,2)
@@ -206,9 +212,9 @@ if state.api is not None:
                 st.write("Comparing your values to typical ones may give you hints on your running style, assessing the role played by stride widening and cadence increase when you run faster.")
                 st.write("Usually, the higher than average is the stride coefficient and/or the lower the cadence one, the more you tend to be a *stride runner*. Instead, if the cadence coefficient (i.e. the right one) is high and the stride coefficient is low, you can probably be classified as a *cadence runner*.")
                 st.write(f"Your stride coefficient is **{delta_str:+.0%}** than average. Your cadence coefficient is **{delta_cad:+.0%}** than average. {draw_conclusions(delta_str,delta_cad)}")
-
             else:
-                "Please load at least two activities!"
+                st.write("Not enough datapoints. Please select a range of dates with more activities.")
+
         elif dates_butt and len(dates)<2:
             st.write("Please select a valid start and end date")
 
