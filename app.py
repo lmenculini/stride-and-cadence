@@ -117,7 +117,7 @@ if state.api is not None:
 
                 lap_df=lap_df.astype({'activity_start_GMT':'datetime64[ns]','lap_start_GMT':'datetime64[ns]'})
                 #lap_df.dtypes
-                #lap_df['activity_start']=lap_df.activity_start_GMT.dt.tz_localize('GMT')
+                #lap_df['activity_start_GMT']=lap_df.activity_start_GMT.dt.tz_localize('GMT')
                 #lap_df['lap_start']=lap_df.lap_start.dt_GMT.tz_localize('GMT')
 
 
@@ -142,7 +142,7 @@ if state.api is not None:
                     title="Stride length vs speed",
                     width=width,
                     labels={'speed':'speed (m/s)','stride_length':'stride length (m)'},
-                    hover_data=['activity_start','pace','lap_distance','speed','stride_length'],
+                    hover_data=['activity_start_GMT','pace','lap_distance','speed','stride_length'],
                     size=clean_df['lap_distance'].clip(0,10**3.5),
                     size_max=10,
                     color='activity_type',
@@ -169,7 +169,7 @@ if state.api is not None:
                     title="Cadence vs speed",
                     width=width,
                     labels={'speed':'speed (m/s)','cadence':'steps per minute'},
-                    hover_data=['activity_start','pace','lap_distance','speed','cadence'],
+                    hover_data=['activity_start_GMT','pace','lap_distance','speed','cadence'],
                     size=clean_df['lap_distance'].clip(0,10**3.5),
                     size_max=10,
                     color='activity_type',
