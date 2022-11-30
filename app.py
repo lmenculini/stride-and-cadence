@@ -116,9 +116,11 @@ if state.api is not None:
                                             "cadence": lap_cad, 
                                             "stride_length": lap_stride,
                             })
-                         else:
+                        
+                        else:
                             entire_activity=True
                             break
+                    
                     if entire_activity:
                         add_data=[] # reset data, i.e. discard laps
                         add_data.append({"activity_type" : activity['activityType'].get('typeKey',None),
