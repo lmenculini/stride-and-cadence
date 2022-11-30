@@ -156,7 +156,7 @@ if state.api is not None:
                                 
 
             if len(clean_df)>=5:
-                st.write(f'Found {len(clean_df)} valid datapoints')
+                st.write(f'Found {len(clean_df)} valid datapoints.')
                 str_c1, str_c0 = np.polyfit(clean_df.speed,clean_df.stride_length,1)
                 cad_c1, cad_c0 = np.polyfit(clean_df.speed,clean_df.cadence,1)
 
