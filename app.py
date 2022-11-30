@@ -100,7 +100,7 @@ if state.api is not None:
                             calc_stride=dist*100/(cad*seconds/60)
                             stride=l.get('strideLength',calc_stride)/100
                             add_laps.append({"activity_type" : activity['activityType'].get('typeKey',None),
-                                            "activity_start_GMT": activity.get(startTimeGMT',datetime.date(2000,1,1)), # avoid errors in fetching activity date
+                                            "activity_start_GMT": activity.get('startTimeGMT',datetime.date(2000,1,1)), # avoid errors in fetching activity date
                                             "activity_distance": dist,
                                             "lap_start_GMT": l.get('startTimeGMT',datetime.date(2000,1,1)),  # avoid errors in fetching lap date
                                             "lap_distance": dist,
